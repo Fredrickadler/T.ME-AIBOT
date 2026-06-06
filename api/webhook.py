@@ -3,8 +3,8 @@ import json
 import requests
 
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
-# کلید رسمی چت‌جی‌پتی شما مستقیم اینجا قرار گرفت 👇
-OPENAI_API_KEY = "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"
+# کلید جدید و کامل چت‌جی‌پتی شما 👇
+OPENAI_API_KEY = "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"
 
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
