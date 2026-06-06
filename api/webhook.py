@@ -3,6 +3,8 @@ import json
 import requests
 
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
+# کلید جدیدی که از سایت DeepInfra گرفتی رو بذار اینجا 👇
+DEEPINFRA_API_KEY = "اینجا_ای_پی_ای_کی_دیپ_اینفرا_رو_بذار"
 
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -12,38 +14,36 @@ def send_telegram_message(chat_id, text):
     }
     requests.post(url, json=payload)
 
-def get_free_ai_response(prompt):
-    # استفاده از ای‌پ‌آی لایه باز و پایدار DuckDuckGo AI Hub بدون محدودیت رایج
-    url = "https://nexra.aryahcr.cc/api/chat/duckduckgo"
+def get_ai_response(prompt):
+    url = "https://api.deepinfra.com/v1/openai/chat/completions"
     
     headers = {
+        "Authorization": f"Bearer {DEEPINFRA_API_KEY}",
         "Content-Type": "application/json"
     }
     
+    # استفاده از مدل فوق‌العاده قوی ۷۰ میلیاردی با پشتیبانی عالی از زبان فارسی
     payload = {
-        "prompt": prompt,
-        "model": "llama-3", # مدل فوق‌العاده هوشمند
-        "stream": False
+        "model": "meta-llama/Meta-Llama-3-70B-Instruct",
+        "messages": [
+            {
+                "role": "system", 
+                "content": "شما یک دستیار هوش مصنوعی بسیار هوشمند، مهربان و مسلط به زبان فارسی هستید. تمام پاسخ‌های خود را به زبان فارسی روان، طبیعی و بدون غلط املایی بنویسید."
+            },
+            {"role": "user", "content": prompt}
+        ]
     }
     
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=25)
+        response = requests.post(url, headers=headers, json=payload, timeout=20)
+        result = response.json()
         
-        # هندل کردن پاسخ‌های مختلف سرور واسط
-        if response.status_code == 200:
-            result = response.json()
-            # استخراج متن پاسخ از ساختار جیسون نکسرا
-            if 'gpt' in result:
-                return result['gpt']
-            elif 'id' in result: # ساختار جایگزین
-                return result.get('text', 'پاسخی دریافت نشد.')
-            else:
-                return response.text
-        else:
-            return f"خطای موقت سیستم (کد {response.status_code})، لطفاً یک بار دیگر پیام بفرستید."
+        if 'error' in result:
+            return f"خطای سرور: {result['error'].get('message', 'خطای ناشناخته')}"
             
+        return result['choices'][0]['message']['content']
     except Exception as e:
-        return f"خطا در پردازش اطلاعات: {str(e)}"
+        return f"خطا در ارتباط: {str(e)}"
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -58,9 +58,9 @@ class handler(BaseHTTPRequestHandler):
                 user_text = update["message"]["text"]
                 
                 if user_text == "/start":
-                    reply = "سلام! ربات هوش مصنوعی جدید، رایگان و بدون محدودیت شما فعال شد. 🚀 هر چه می‌خواهی بپرس تا پاسخ دهم!"
+                    reply = "سلام! من ربات هوش مصنوعی جدید تو هستم. حالا با خیال راحت هر چی می‌خوای به فارسی روان بنویس تا جوابت رو بدم! 🤖🌸"
                 else:
-                    reply = get_free_ai_response(user_text)
+                    reply = get_ai_response(user_text)
                 
                 send_telegram_message(chat_id, reply)
                 
