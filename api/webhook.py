@@ -1,7 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import requests
-import urllib.parse
 
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
 
@@ -14,25 +13,37 @@ def send_telegram_message(chat_id, text):
     requests.post(url, json=payload)
 
 def get_free_ai_response(prompt):
-    # استفاده از سیستم رایگان، بدون کلید و فوق‌العاده پایدار Pollinations
-    # یک سیستم پروکسی برای هدایت متن به مدل‌های پیشرفته هوش مصنوعی با زبان فارسی روان
-    system_prompt = "شما یک دستیار هوش مصنوعی هوشمند و مسلط به زبان فارسی هستید. به تمام سوالات با لحنی کاملاً روان، طبیعی و صمیمی پاسخ دهید."
+    # استفاده از ای‌پ‌آی لایه باز و پایدار DuckDuckGo AI Hub بدون محدودیت رایج
+    url = "https://nexra.aryahcr.cc/api/chat/duckduckgo"
     
-    # ترکیب پرامپت سیستمی و متن کاربر برای بهترین بازدهی
-    full_prompt = f"{system_prompt}\n\nکاربر: {prompt}"
-    encoded_prompt = urllib.parse.quote(full_prompt)
+    headers = {
+        "Content-Type": "application/json"
+    }
     
-    # استفاده از مدل باکیفیت و باز openai (بدون تحریم و کاملاً رایگان)
-    url = f"https://text.pollinations.ai/{encoded_prompt}?model=openai"
+    payload = {
+        "prompt": prompt,
+        "model": "llama-3", # مدل فوق‌العاده هوشمند
+        "stream": False
+    }
     
     try:
-        response = requests.get(url, timeout=25)
+        response = requests.post(url, headers=headers, json=payload, timeout=25)
+        
+        # هندل کردن پاسخ‌های مختلف سرور واسط
         if response.status_code == 200:
-            return response.text
+            result = response.json()
+            # استخراج متن پاسخ از ساختار جیسون نکسرا
+            if 'gpt' in result:
+                return result['gpt']
+            elif 'id' in result: # ساختار جایگزین
+                return result.get('text', 'پاسخی دریافت نشد.')
+            else:
+                return response.text
         else:
-            return f"خطای سرور واسط (کد {response.status_code}): لطفا دوباره تلاش کنید."
+            return f"خطای موقت سیستم (کد {response.status_code})، لطفاً یک بار دیگر پیام بفرستید."
+            
     except Exception as e:
-        return f"خطا در سیستم پشتیبان: {str(e)}"
+        return f"خطا در پردازش اطلاعات: {str(e)}"
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -47,7 +58,7 @@ class handler(BaseHTTPRequestHandler):
                 user_text = update["message"]["text"]
                 
                 if user_text == "/start":
-                    reply = "سلام! ربات هوش مصنوعی رایگان و بدون تحریم شما فعال شد. 🚀 بدون هیچ مشکلی هر چی می‌خوای بپرس تا به فارسی روان جوابت رو بدم!"
+                    reply = "سلام! ربات هوش مصنوعی جدید، رایگان و بدون محدودیت شما فعال شد. 🚀 هر چه می‌خواهی بپرس تا پاسخ دهم!"
                 else:
                     reply = get_free_ai_response(user_text)
                 
