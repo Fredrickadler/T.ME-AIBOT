@@ -3,8 +3,8 @@ import json
 import requests
 
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
-# کلید جدید و کامل چت‌جی‌پتی شما 👇
-OPENAI_API_KEY = "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"
+# توکن رایگان Hugging Face شما مستقیم اینجا قرار گرفت 👇
+HF_API_KEY = "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"
 
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -14,23 +14,25 @@ def send_telegram_message(chat_id, text):
     }
     requests.post(url, json=payload)
 
-def get_chatgpt_response(prompt):
-    url = "https://api.openai.com/v1/chat/completions"
+def get_ai_response(prompt):
+    # استفاده از مدل فوق‌العاده قدرتمند ۷۰ میلیاردی لاما ۳ با کیفیت عالی در زبان فارسی
+    url = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-70B-Instruct/v1/chat/completions"
     
     headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Authorization": f"Bearer {HF_API_KEY}",
         "Content-Type": "application/json"
     }
     
     payload = {
-        "model": "gpt-4o-mini",
+        "model": "meta-llama/Meta-Llama-3-70B-Instruct",
         "messages": [
             {
                 "role": "system", 
-                "content": "شما ربات هوش مصنوعی رسمی ChatGPT مسلط به زبان فارسی هستید. به تمام سوالات با لحنی کاملاً طبیعی، روان و صمیمی پاسخ دهید."
+                "content": "شما یک دستیار هوش مصنوعی هوشمند و مسلط به زبان فارسی هستید. به تمام سوالات با لحنی کاملاً روان، طبیعی و صمیمی پاسخ دهید."
             },
             {"role": "user", "content": prompt}
-        ]
+        ],
+        "max_tokens": 500
     }
     
     try:
@@ -38,7 +40,7 @@ def get_chatgpt_response(prompt):
         result = response.json()
         
         if 'error' in result:
-            return f"خطای اپن‌آی‌ای: {result['error'].get('message', 'خطای ناشناخته')}"
+            return f"خطای سرور رایگان: {result['error'] if isinstance(result['error'], str) else result['error'].get('message', 'خطا')}"
             
         return result['choices'][0]['message']['content']
     except Exception as e:
@@ -57,9 +59,9 @@ class handler(BaseHTTPRequestHandler):
                 user_text = update["message"]["text"]
                 
                 if user_text == "/start":
-                    reply = "سلام! ربات چت‌جی‌پتی اصلی شما روی تلگرام با موفقیت فعال شد. 🦾 هر چیزی می‌خوای بپرس تا با کیفیت درجه‌یک جوابت رو بدم!"
+                    reply = "سلام! ربات هوش مصنوعی رایگان و پرقدرت شما فعال شد. 🚀 هر چی می‌خوای بپرس تا به فارسی روان جوابت رو بدم!"
                 else:
-                    reply = get_chatgpt_response(user_text)
+                    reply = get_ai_response(user_text)
                 
                 send_telegram_message(chat_id, reply)
                 
