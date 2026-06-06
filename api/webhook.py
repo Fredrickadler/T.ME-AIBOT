@@ -21,9 +21,9 @@ def get_ai_response(prompt):
         "Content-Type": "application/json"
     }
     
-    # استفاده از مدل فوق‌العاده سریع و بهینه شده Llama 3
+    # استفاده از مدل جدید و فعال llama-3.1-8b-instant
     payload = {
-        "model": "llama3-8b-8192",
+        "model": "llama-3.1-8b-instant",
         "messages": [
             {"role": "system", "content": "You are a helpful assistant. Always reply in the same language the user speaks to you."},
             {"role": "user", "content": prompt}
