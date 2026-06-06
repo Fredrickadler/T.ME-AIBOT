@@ -3,7 +3,8 @@ import json
 import requests
 
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
-GROQ_API_KEY = "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"
+# کلید رسمی چت‌جی‌پتی شما مستقیم اینجا قرار گرفت 👇
+OPENAI_API_KEY = "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"
 
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -13,29 +14,31 @@ def send_telegram_message(chat_id, text):
     }
     requests.post(url, json=payload)
 
-def get_ai_response(prompt):
-    url = "https://api.groq.com/openai/v1/chat/completions"
+def get_chatgpt_response(prompt):
+    url = "https://api.openai.com/v1/chat/completions"
     
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json"
     }
     
-    # استفاده از مدل جدید و فعال llama-3.1-8b-instant
     payload = {
-        "model": "llama-3.1-8b-instant",
+        "model": "gpt-4o-mini",
         "messages": [
-            {"role": "system", "content": "You are a helpful assistant. Always reply in the same language the user speaks to you."},
+            {
+                "role": "system", 
+                "content": "شما ربات هوش مصنوعی رسمی ChatGPT مسلط به زبان فارسی هستید. به تمام سوالات با لحنی کاملاً طبیعی، روان و صمیمی پاسخ دهید."
+            },
             {"role": "user", "content": prompt}
         ]
     }
     
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        response = requests.post(url, headers=headers, json=payload, timeout=20)
         result = response.json()
         
         if 'error' in result:
-            return f"خطای سرور هوش مصنوعی: {result['error'].get('message', 'خطای ناشناخته')}"
+            return f"خطای اپن‌آی‌ای: {result['error'].get('message', 'خطای ناشناخته')}"
             
         return result['choices'][0]['message']['content']
     except Exception as e:
@@ -54,9 +57,9 @@ class handler(BaseHTTPRequestHandler):
                 user_text = update["message"]["text"]
                 
                 if user_text == "/start":
-                    reply = "سلام! من ربات هوش مصنوعی تو هستم روی ورسل. هر چی بخوای بنویس تا با سرعت نور جواب بدم! ⚡🚀"
+                    reply = "سلام! ربات چت‌جی‌پتی اصلی شما روی تلگرام با موفقیت فعال شد. 🦾 هر چیزی می‌خوای بپرس تا با کیفیت درجه‌یک جوابت رو بدم!"
                 else:
-                    reply = get_ai_response(user_text)
+                    reply = get_chatgpt_response(user_text)
                 
                 send_telegram_message(chat_id, reply)
                 
