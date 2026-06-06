@@ -3,7 +3,7 @@ import json
 import requests
 
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
-GEMINI_API_KEY = "AIzaSyBEubFM7eV6cwK3uuNKMR2d6_lFFzmgfoM"
+GROQ_API_KEY = "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"
 
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -13,18 +13,21 @@ def send_telegram_message(chat_id, text):
     }
     requests.post(url, json=payload)
 
-def get_gemini_response(prompt):
-    # استفاده از ورژن ثابت v1 به همراه مدل اصلی gemini-1.5-flash
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+def get_ai_response(prompt):
+    url = "https://api.groq.com/openai/v1/chat/completions"
     
     headers = {
-        'Content-Type': 'application/json'
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
     }
     
+    # استفاده از مدل فوق‌العاده سریع و بهینه شده Llama 3
     payload = {
-        "contents": [{
-            "parts": [{"text": prompt}]
-        }]
+        "model": "llama3-8b-8192",
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant. Always reply in the same language the user speaks to you."},
+            {"role": "user", "content": prompt}
+        ]
     }
     
     try:
@@ -32,9 +35,9 @@ def get_gemini_response(prompt):
         result = response.json()
         
         if 'error' in result:
-            return f"خطای گوگل: {result['error'].get('message', 'خطای ناشناخته')}\nکد خطا: {result['error'].get('code', '')}"
+            return f"خطای سرور هوش مصنوعی: {result['error'].get('message', 'خطای ناشناخته')}"
             
-        return result['candidates'][0]['content']['parts'][0]['text']
+        return result['choices'][0]['message']['content']
     except Exception as e:
         return f"خطا در ارتباط: {str(e)}"
 
@@ -51,9 +54,9 @@ class handler(BaseHTTPRequestHandler):
                 user_text = update["message"]["text"]
                 
                 if user_text == "/start":
-                    reply = "سلام! من ربات هوش مصنوعی تو هستم روی ورسل. هر چی بخوای بنویس تا جواب بدم. 🚀"
+                    reply = "سلام! من ربات هوش مصنوعی تو هستم روی ورسل. هر چی بخوای بنویس تا با سرعت نور جواب بدم! ⚡🚀"
                 else:
-                    reply = get_gemini_response(user_text)
+                    reply = get_ai_response(user_text)
                 
                 send_telegram_message(chat_id, reply)
                 
