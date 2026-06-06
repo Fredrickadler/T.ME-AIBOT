@@ -3,8 +3,7 @@ import json
 import requests
 
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
-# کلید جدیدی که از سایت DeepInfra گرفتی رو بذار اینجا 👇
-DEEPINFRA_API_KEY = "اینجا_ای_پی_ای_کی_دیپ_اینفرا_رو_بذار"
+GROQ_API_KEY = "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"
 
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -15,31 +14,28 @@ def send_telegram_message(chat_id, text):
     requests.post(url, json=payload)
 
 def get_ai_response(prompt):
-    url = "https://api.deepinfra.com/v1/openai/chat/completions"
+    url = "https://api.groq.com/openai/v1/chat/completions"
     
     headers = {
-        "Authorization": f"Bearer {DEEPINFRA_API_KEY}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
     
-    # استفاده از مدل فوق‌العاده قوی ۷۰ میلیاردی با پشتیبانی عالی از زبان فارسی
+    # استفاده از مدل جدید و فعال llama-3.1-8b-instant
     payload = {
-        "model": "meta-llama/Meta-Llama-3-70B-Instruct",
+        "model": "llama-3.1-8b-instant",
         "messages": [
-            {
-                "role": "system", 
-                "content": "شما یک دستیار هوش مصنوعی بسیار هوشمند، مهربان و مسلط به زبان فارسی هستید. تمام پاسخ‌های خود را به زبان فارسی روان، طبیعی و بدون غلط املایی بنویسید."
-            },
+            {"role": "system", "content": "You are a helpful assistant. Always reply in the same language the user speaks to you."},
             {"role": "user", "content": prompt}
         ]
     }
     
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=20)
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
         result = response.json()
         
         if 'error' in result:
-            return f"خطای سرور: {result['error'].get('message', 'خطای ناشناخته')}"
+            return f"خطای سرور هوش مصنوعی: {result['error'].get('message', 'خطای ناشناخته')}"
             
         return result['choices'][0]['message']['content']
     except Exception as e:
@@ -58,7 +54,7 @@ class handler(BaseHTTPRequestHandler):
                 user_text = update["message"]["text"]
                 
                 if user_text == "/start":
-                    reply = "سلام! من ربات هوش مصنوعی جدید تو هستم. حالا با خیال راحت هر چی می‌خوای به فارسی روان بنویس تا جوابت رو بدم! 🤖🌸"
+                    reply = "سلام! من ربات هوش مصنوعی تو هستم روی ورسل. هر چی بخوای بنویس تا با سرعت نور جواب بدم! ⚡🚀"
                 else:
                     reply = get_ai_response(user_text)
                 
