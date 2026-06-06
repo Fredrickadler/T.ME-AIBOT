@@ -14,13 +14,11 @@ def send_telegram_message(chat_id, text):
     requests.post(url, json=payload)
 
 def get_gemini_response(prompt):
-    # استفاده از نسخه پایدارتر API گوگل
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # تغییر آدرس به نسخه اصلی v1 و استفاده از مدل کاملاً پایدار gemini-pro
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
     
-    # اضافه کردن User-Agent برای اینکه سرور ورسل شبیه مرورگر به نظر برسه و بلاک نشه
     headers = {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        'Content-Type': 'application/json'
     }
     
     payload = {
@@ -30,10 +28,9 @@ def get_gemini_response(prompt):
     }
     
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
         result = response.json()
         
-        # اگر گوگل ارور فرستاده باشه اینجا مشخص میشه
         if 'error' in result:
             return f"خطای گوگل: {result['error'].get('message', 'خطای ناشناخته')}"
             
