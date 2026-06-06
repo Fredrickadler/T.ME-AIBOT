@@ -14,8 +14,8 @@ def send_telegram_message(chat_id, text):
     requests.post(url, json=payload)
 
 def get_gemini_response(prompt):
-    # تغییر آدرس به نسخه اصلی v1 و استفاده از مدل کاملاً پایدار gemini-pro
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+    # استفاده از ورژن ثابت v1 به همراه مدل اصلی gemini-1.5-flash
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     headers = {
         'Content-Type': 'application/json'
@@ -32,7 +32,7 @@ def get_gemini_response(prompt):
         result = response.json()
         
         if 'error' in result:
-            return f"خطای گوگل: {result['error'].get('message', 'خطای ناشناخته')}"
+            return f"خطای گوگل: {result['error'].get('message', 'خطای ناشناخته')}\nکد خطا: {result['error'].get('code', '')}"
             
         return result['candidates'][0]['content']['parts'][0]['text']
     except Exception as e:
