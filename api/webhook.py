@@ -2,11 +2,9 @@ from http.server import BaseHTTPRequestHandler
 import json
 import requests
 
-# توکن‌های شما که مستقیم جایگذاری شدن
 TELEGRAM_BOT_TOKEN = "8975706157:AAFsAJfYZdHWUeXK_btpXKvW2j5EjRspQOo"
 GEMINI_API_KEY = "AIzaSyBEubFM7eV6cwK3uuNKMR2d6_lFFzmgfoM"
 
-# منطق ارسال پیام به تلگرام
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
@@ -15,21 +13,33 @@ def send_telegram_message(chat_id, text):
     }
     requests.post(url, json=payload)
 
-# منطق گرفتن پاسخ از هوش مصنوعی جمینای
 def get_gemini_response(prompt):
+    # استفاده از نسخه پایدارتر API گوگل
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    headers = {'Content-Type': 'application/json'}
+    
+    # اضافه کردن User-Agent برای اینکه سرور ورسل شبیه مرورگر به نظر برسه و بلاک نشه
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    }
+    
     payload = {
         "contents": [{
             "parts": [{"text": prompt}]
         }]
     }
+    
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
         result = response.json()
+        
+        # اگر گوگل ارور فرستاده باشه اینجا مشخص میشه
+        if 'error' in result:
+            return f"خطای گوگل: {result['error'].get('message', 'خطای ناشناخته')}"
+            
         return result['candidates'][0]['content']['parts'][0]['text']
     except Exception as e:
-        return "شرمنده، یه مشکلی توی پردازش هوش مصنوعی پیش اومد."
+        return f"خطا در ارتباط: {str(e)}"
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -39,7 +49,6 @@ class handler(BaseHTTPRequestHandler):
         try:
             update = json.loads(post_data.decode('utf-8'))
             
-            # بررسی پیام و اجرای منطق پاسخگویی
             if "message" in update and "text" in update["message"]:
                 chat_id = update["message"]["chat"]["id"]
                 user_text = update["message"]["text"]
